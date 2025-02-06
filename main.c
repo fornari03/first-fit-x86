@@ -1,9 +1,17 @@
 #include <stdio.h>
 
+int main(int argc, char *argv[]) {
+    extern int f1(int, int, int, int, int, int, int, int, int, int);
+    int prog = atoi(argv[1]);
+    int blocks[8];
+    for (int i = 1; i <= 8; i++) {
+        if (i < argc - 1) {
+            blocks[i-1] = atoi(argv[i + 1]);
+        } else {
+            blocks[i-1] = 0;
+        }
+    }
 
-int main() {
-    extern int soma(int, int);
-    int resultado = soma(5, 3);
-    printf("Resultado: %d\n", resultado);
+    int resultado = f1(argc-2, prog, blocks[0], blocks[1], blocks[2], blocks[3], blocks[4], blocks[5], blocks[6], blocks[7]);
     return 0;
 }
