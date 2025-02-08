@@ -1,10 +1,12 @@
-section .text
-    global f1
+section .data
 
-f1:
-    enter 0, 0
-    mov eax, [ebp+8]    ; numero de endereços + tamanhos dos blocos
-    add eax, [ebp+12]
-    add eax, [ebp+16]
-    leave
-    ret
+
+section .text
+global f1
+
+f1:     enter 0, 0
+    
+        mov eax, DWORD [ebp+8]
+
+        leave
+        ret
