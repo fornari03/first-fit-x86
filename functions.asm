@@ -8,7 +8,7 @@ newline db 0ah
 nao_cabe db 'O programa dado nao cabe nos blocos de memoria passados.',0ah,0dh
 nao_cabe_size equ $-nao_cabe
 
-cabe db 'O programa foi alocado da seguinte forma nos blocos de memoria passados:',0ah,0dh
+cabe db 0ah,0dh,'O programa foi alocado da seguinte forma nos blocos de memoria passados:',0ah,0dh,0ah,0dh
 cabe_size equ $-cabe
 
 msg_bloco db 'Bloco '
@@ -36,7 +36,7 @@ f1:             enter 5, 0
         
                 mov eax, DWORD program_size             ; eax = tamanho do programa
                 mov ecx, DWORD quant_blocks             ; ecx = quantidade de blocos
-                mov ebx, 5                              ; ebx = indice na pilha
+                mov ebx, 5                              ; ebx = indice na pilha pro tamanho do primeiro bloco
                 mov BYTE [ebp-1], 1                     ; flag pra dizer se coube
 
 repete: 
@@ -49,38 +49,38 @@ repete:
 
                 ; se chegou aqui, o programa não coube nos blocos
                 mov BYTE [ebp-1], 0
-                sub ebx, 2
 
 encerra_f1:
                 dec ebx
                 mov DWORD last_aloc, ebx
-                mov ebx, 5
+                mov ebx, 4
                 ; eax = restante de espaço do programa a ser alocado
-                ; ebx = 5 (endereço inicial do 1° bloco)
+                ; ebx = 4 (endereço inicial do 1° bloco)
                 ; last_aloc = indice na pilha pro endereço do ultimo bloco que aloca espaço [FIXO]
                 ; ecx -> não importa
 
 args_blocos:
                 cmp ebx, DWORD last_aloc            
-                jne ultimo_bloco                        ; enquanto ebx < last_aloc:
-                mov ecx, DWORD [ebp+ebx*4]
+                je ultimo_bloco                         ; enquanto ebx < last_aloc:
+                mov ecx, DWORD [ebp+ebx*4]              ; ecx = endereço inicial
                 push ecx                                ; push endereço inicial
-                inc ebx
-                add ecx, DWORD [ebp+ebx*4]
-                dec ecx
+                inc ebx                                 ; ebx++
+                add ecx, DWORD [ebp+ebx*4]              ; ecx = endereço inicial + tamanho
+                dec ecx                                 ; ecx--
                 push ecx                                ; push endereço final usado
                 push ecx                                ; push ultimo endereço do bloco
+                inc ebx                                 ; ebx++
                 jmp args_blocos
 
 ultimo_bloco:
-                mov ecx, DWORD [ebp+ebx*4]
+                mov ecx, DWORD [ebp+ebx*4]              ; ecx = endereço inicial
                 push ecx                                ; push endereço inicial
-                inc ebx
-                add ecx, eax
-                dec ecx
-                push ecx                                ; push endereço final usado
-                sub ecx, eax
-                add ecx, DWORD [ebp+ebx*4]
+                add ecx, eax                            ; ecx += eax (add o tamanho do resto do programa)
+                dec ecx                                 ; ecx--
+                push ecx                                ; push endereço final USADO
+                inc ebx                                 ; ebx++
+                sub ecx, eax                            ; ecx -= eax
+                add ecx, DWORD [ebp+ebx*4]              ; ecx = endereço inicial - 1 + tamanho
                 push ecx                                ; push ultimo endereço do bloco
 
                 ; enquanto ebx <|<= quant_blocks*2
@@ -111,6 +111,8 @@ ultimo_bloco:
                 pop ecx
                 leave
                 ret
+
+
 
 
 
@@ -169,7 +171,11 @@ results:
                 call print_num                          ; printa endereço final do bloco
                 add esp, 4
 
-                add edx, 3
+                push newline
+                push 1
+                call print_str
+
+                add edx, 5
                 loop results
 
 fim_f2:
@@ -188,6 +194,7 @@ nao_coube:
                 popa
                 jmp fim_f2
                 
+
 
 
 
