@@ -8,7 +8,7 @@ newline db 0ah
 nao_cabe db 'O programa dado nao cabe nos blocos de memoria passados.',0ah,0dh
 nao_cabe_size equ $-nao_cabe
 
-cabe db 'O programa foi alocado da seguinte forma nos blocos de memoria passado:',0ah,0dh
+cabe db 'O programa foi alocado da seguinte forma nos blocos de memoria passados:',0ah,0dh
 cabe_size equ $-cabe
 
 msg_bloco db 'Bloco '
@@ -117,22 +117,63 @@ ultimo_bloco:
 f2:
                 enter 0,0
                 push ecx
+                push edx
 
                 cmp DWORD [ebp+8], 0
                 je nao_coube
 
+                ; se chega aqui, é porque coube
+                push cabe
+                push cabe_size
+                call print_str                          ; printa que cabe o programa
+                add esp, 8
                 mov ecx, DWORD [ebp+12]                 ; ecx = quant_blocks
-                
+                mov edx, 6                              ; edx = indice na pilha
 
-results:                
+results:
+                push msg_bloco
+                push msg_bloco_size
+                call print_str                          ; printa "Bloco "
+                add esp, 8
 
-
-                ;push num
-                ;call print_num                          ; printa o numero
+                push ecx
+                call print_num                          ; printa o numero do bloco
                 add esp, 4
+
+                push msg_inicio
+                push msg_inicio_size
+                call print_str                          ; printa "Endereco inicial: "
+                add esp, 8
+
+                push DWORD [ebp+4*edx]
+                call print_num                          ; printa endereço de inicio do bloco
+                add esp, 4
+
+                push msg_utilizado
+                push msg_utilizado_size
+                call print_str                          ; printa "Ultimo endereco utilizado: "
+                add esp, 8
+
+                dec edx                                 ; edx--
+                push DWORD [ebp+4*edx]
+                call print_num                          ; printa endereço de uso do bloco
+                add esp, 4
+
+                push msg_fim
+                push msg_fim_size
+                call print_str                          ; printa "Ultimo endereco utilizado: "
+                add esp, 8                
+
+                dec edx                                 ; edx--
+                push DWORD [ebp+4*edx]
+                call print_num                          ; printa endereço final do bloco
+                add esp, 4
+
+                add edx, 3
                 loop results
 
 fim_f2:
+                pop edx
                 pop ecx
                 leave
                 ret
@@ -157,9 +198,10 @@ nao_coube:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 print_num:
                 enter 0,0
+                push eax       
                 push ebx                                
                 push ecx                                
-                push edx           
+                push edx    
 
                 mov edi, buffer
                 mov ecx, 12
@@ -196,5 +238,35 @@ convert_loop:
                 pop edx
                 pop ecx
                 pop ebx
+                pop eax
+                leave
+                ret
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Função auxiliar para ;;;
+;;;  printar uma string  ;;;
+;;;       na tela        ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+print_str:
+                enter 0,0
+
+                push eax
+                push ebx
+                push ecx
+                push edx
+
+                mov eax, 4
+                mov ebx, 1
+                mov ecx, DWORD [ebp+12]
+                movzx edx, BYTE [ebp+8]
+                int 80h
+
+                pop edx
+                pop ecx
+                pop ebx
+                pop eax
+
                 leave
                 ret
