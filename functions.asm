@@ -40,14 +40,24 @@ encerra_f1:
                 mov ecx, DWORD quant_blocks
                 push ecx                                ; push quantidade de blocos
 
-                ; enquanto ebx <|<= last_aloc:
+                ; enquanto ebx < last_aloc:
                 ;     mov ecx, DWORD [ebp+ebx*4]
                 ;     push ecx                          ; push endereço inicial
                 ;     inc ebx
-                ;     VERIFICAR VALOR DO EAX
                 ;     add ecx, DWORD [ebp+ebx*4]
                 ;     dec ecx 1
                 ;     push ecx                          ; push endereço final usado
+                ;     push ecx                          ; push ultimo endereço do bloco
+
+                ; quando ebx == last_aloc
+                ;     mov ecx, DWORD [ebp+ebx*4]
+                ;     push ecx                          ; push endereço inicial
+                ;     inc ebx
+                ;     add ecx, eax
+                ;     dec ecx
+                ;     push ecx                          ; push endereço final usado
+                ;     sub ecx, eax
+                ;     add ecx, DWORD [ebp+ebx*4]
                 ;     push ecx                          ; push ultimo endereço do bloco
 
                 ; enquanto ebx <|<= quant_blocks*2
