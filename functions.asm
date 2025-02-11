@@ -5,6 +5,24 @@
 section .data
 newline db 0ah
 
+nao_cabe db 'O programa dado nao cabe nos blocos de memoria passados.',0ah,0dh
+nao_cabe_size equ $-nao_cabe
+
+cabe db 'O programa foi alocado da seguinte forma nos blocos de memoria passado:',0ah,0dh
+cabe_size equ $-cabe
+
+msg_bloco db 'Bloco '
+msg_bloco_size equ $-msg_bloco
+
+msg_inicio db 'Endereco inicial: '
+msg_inicio_size equ $-msg_inicio
+
+msg_utilizado db 'Ultimo endereco utilizado: '
+msg_utilizado_size equ $-msg_utilizado
+
+msg_fim db 'Endereco final: '
+msg_fim_size equ $-msg_fim
+
 section .bss
 buffer resb 12
 
@@ -12,20 +30,6 @@ section .text
 global f1
 
 f1:             enter 5, 0
-
-                mov eax, 1234567890
-                push eax
-                call print_num
-                add esp, 4
-                mov eax, 165
-                push eax
-                call print_num
-                add esp, 4
-
-                leave
-                ret
-
-
 
                 push ecx
                 push ebx
@@ -45,6 +49,7 @@ repete:
 
                 ; se chegou aqui, o programa não coube nos blocos
                 mov BYTE [ebp-1], 0
+                sub ebx, 2
 
 encerra_f1:
                 dec ebx
@@ -54,30 +59,29 @@ encerra_f1:
                 ; ebx = 5 (endereço inicial do 1° bloco)
                 ; last_aloc = indice na pilha pro endereço do ultimo bloco que aloca espaço [FIXO]
                 ; ecx -> não importa
-                movzx ecx, BYTE [ebp-1]
-                push ecx                                ; push flag de dizer se coube
-                mov ecx, DWORD quant_blocks
-                push ecx                                ; push quantidade de blocos
 
-                ; enquanto ebx < last_aloc:
-                ;     mov ecx, DWORD [ebp+ebx*4]
-                ;     push ecx                          ; push endereço inicial
-                ;     inc ebx
-                ;     add ecx, DWORD [ebp+ebx*4]
-                ;     dec ecx 1
-                ;     push ecx                          ; push endereço final usado
-                ;     push ecx                          ; push ultimo endereço do bloco
+args_blocos:
+                cmp ebx, DWORD last_aloc            
+                jne ultimo_bloco                        ; enquanto ebx < last_aloc:
+                mov ecx, DWORD [ebp+ebx*4]
+                push ecx                                ; push endereço inicial
+                inc ebx
+                add ecx, DWORD [ebp+ebx*4]
+                dec ecx
+                push ecx                                ; push endereço final usado
+                push ecx                                ; push ultimo endereço do bloco
+                jmp args_blocos
 
-                ; quando ebx == last_aloc
-                ;     mov ecx, DWORD [ebp+ebx*4]
-                ;     push ecx                          ; push endereço inicial
-                ;     inc ebx
-                ;     add ecx, eax
-                ;     dec ecx
-                ;     push ecx                          ; push endereço final usado
-                ;     sub ecx, eax
-                ;     add ecx, DWORD [ebp+ebx*4]
-                ;     push ecx                          ; push ultimo endereço do bloco
+ultimo_bloco:
+                mov ecx, DWORD [ebp+ebx*4]
+                push ecx                                ; push endereço inicial
+                inc ebx
+                add ecx, eax
+                dec ecx
+                push ecx                                ; push endereço final usado
+                sub ecx, eax
+                add ecx, DWORD [ebp+ebx*4]
+                push ecx                                ; push ultimo endereço do bloco
 
                 ; enquanto ebx <|<= quant_blocks*2
                 ;     mov ecx, DWORD [ebp+ebx*4]
@@ -87,15 +91,19 @@ encerra_f1:
                 ;     dec ecx 1
                 ;     push ecx                          ; push ultimo endereço do bloco
 
+                mov ecx, DWORD quant_blocks
+                push ecx                                ; push quantidade de blocos
+                movzx ecx, BYTE [ebp-1]
+                push ecx                                ; push flag de dizer se coube
 
-                ; call f2
-                ; mov ecx, DWORD quant_blocks           ; ecx = q
-                ; add ecx, ecx                          ; ecx = 2q
-                ; add ecx, ecx                          ; ecx = 4q
-                ; mov edx, ecx                          ; edx = 4q
-                ; add ecx, ecx                          ; ecx = 8q
-                ; add ecx, edx                          ; ecx = 12q
-                ; add esp, ecx                          ; add esp 12 * quant_blocks
+                call f2
+                mov ecx, DWORD quant_blocks             ; ecx = q
+                add ecx, ecx                            ; ecx = 2q
+                add ecx, ecx                            ; ecx = 4q
+                mov edx, ecx                            ; edx = 4q
+                add ecx, ecx                            ; ecx = 8q
+                add ecx, edx                            ; ecx = 12q
+                add esp, ecx                            ; add esp 12 * quant_blocks
 
                 add esp, 8
                 
@@ -108,14 +116,45 @@ encerra_f1:
 
 f2:
                 enter 0,0
+                push ecx
+
+                cmp DWORD [ebp+8], 0
+                je nao_coube
+
+                mov ecx, DWORD [ebp+12]                 ; ecx = quant_blocks
+                
+
+results:                
+
 
                 ;push num
-                call print_num
+                ;call print_num                          ; printa o numero
+                add esp, 4
+                loop results
 
+fim_f2:
+                pop ecx
                 leave
                 ret
 
+nao_coube:      
+                pusha
+                mov eax, 4
+                mov ebx, 1
+                mov ecx, nao_cabe
+                mov edx, nao_cabe_size
+                int 80h
+                popa
+                jmp fim_f2
+                
 
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Função auxiliar para ;;;
+;;;   printar um número  ;;;
+;;;       na tela        ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 print_num:
                 enter 0,0
                 push ebx                                
