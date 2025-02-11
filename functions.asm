@@ -3,11 +3,30 @@
 %define last_aloc [ebp-5]
 
 section .data
+newline db 0ah
+
+section .bss
+buffer resb 12
 
 section .text
 global f1
 
 f1:             enter 5, 0
+
+                mov eax, 1234567890
+                push eax
+                call print_num
+                add esp, 4
+                mov eax, 165
+                push eax
+                call print_num
+                add esp, 4
+
+                leave
+                ret
+
+
+
                 push ecx
                 push ebx
         
@@ -82,5 +101,61 @@ encerra_f1:
                 
                 pop ebx
                 pop ecx
+                leave
+                ret
+
+
+
+f2:
+                enter 0,0
+
+                ;push num
+                call print_num
+
+                leave
+                ret
+
+
+print_num:
+                enter 0,0
+                push ebx                                
+                push ecx                                
+                push edx           
+
+                mov edi, buffer
+                mov ecx, 12
+                mov al, 0
+                rep stosb                               ; limpa o buffer (12 bytes)
+                     
+
+                mov ecx, buffer + 10                    ; aponta ecx para o final do buffer
+                mov byte [ecx], 0
+                mov ebx, 10                             ; decimal
+                mov eax, DWORD [ebp+8]                  ; pega argumento (numero pra printar)
+
+convert_loop:
+                dec ecx
+                mov edx, 0
+                div ebx                                 ; dl = eax % 10; eax /= 10
+                add dl, 0x30                            ; converte o resto pra ASCII
+                mov BYTE [ecx], dl                      ; move o ASCII pro buffer
+                cmp eax, 0
+                jnz convert_loop                        ; enquanto tiver digito, volta
+
+                mov eax, 4
+                mov ebx, 1
+                mov ecx, buffer
+                mov edx, 10
+                int 80h                                 ; printa o numero
+
+                mov eax, 4
+                mov ebx, 1
+                mov ecx, newline
+                mov edx, 1
+                int 80h                                 ; printa '\n'
+
+                pop edx
+                pop ecx
+                pop ebx
                 leave
                 ret
