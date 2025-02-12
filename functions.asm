@@ -17,11 +17,14 @@ msg_bloco_size equ $-msg_bloco
 msg_inicio db 'Endereco inicial: '
 msg_inicio_size equ $-msg_inicio
 
-msg_utilizado db 'Ultimo endereco utilizado: '
+msg_utilizado db 'Ultimo endereco alocado: '
 msg_utilizado_size equ $-msg_utilizado
 
 msg_fim db 'Endereco final: '
 msg_fim_size equ $-msg_fim
+
+msg_nao_usou db 'Bloco não foi utilizado.',0ah,0dh
+msg_nao_usou_size equ $-msg_nao_usou
 
 section .bss
 buffer resb 12
@@ -49,7 +52,7 @@ repete:
 
                 ; se chegou aqui, o programa não coube nos blocos
                 mov BYTE [ebp-1], 0
-                sub ebx, 2
+                sub ebx, 2                              ; ajusta o índice pro último
 
 encerra_f1:
                 dec ebx
@@ -74,6 +77,7 @@ args_blocos:
                 jmp args_blocos
 
 ultimo_bloco:
+                ; último bloco utilizado
                 mov ecx, DWORD [ebp+ebx*4]              ; ecx = endereço inicial
                 push ecx                                ; push endereço inicial
                 add ecx, eax                            ; ecx += eax (add o tamanho do resto do programa)
@@ -84,14 +88,25 @@ ultimo_bloco:
                 add ecx, DWORD [ebp+ebx*4]              ; ecx = endereço inicial - 1 + tamanho
                 push ecx                                ; push ultimo endereço do bloco
 
-                ; enquanto ebx <|<= quant_blocks*2
-                ;     mov ecx, DWORD [ebp+ebx*4]
-                ;     push ecx                          ; push endereço inicial
-                ;     push -1                           ; indica que não usou
-                ;     add ecx, DWORD [ebp+ebx*4]
-                ;     dec ecx 1
-                ;     push ecx                          ; push ultimo endereço do bloco
+                mov eax, DWORD quant_blocks             ; eax = q
+                dec eax                                 ; eax = q-1
+                add eax, eax                            ; eax = (q-1)*2
+                add eax, 5                              ; eax = 5 + (q-1)*2
 
+restantes:
+                inc ebx
+                cmp ebx, eax                            ; ebx >= ultimo bloco
+                jge chama_f2                            ; ? chama_f2 : continua
+                mov ecx, DWORD [ebp+ebx*4]              ; ecx = endereço inicial
+                push ecx                                ; push endereço inicial
+                push -1                                 ; indica que não usou
+                inc ebx                                 ; ebx--
+                add ecx, DWORD [ebp+ebx*4]              ; ecx += tamanho do bloco
+                dec ecx                                 ; ecx--
+                push ecx                                ; push ultimo endereço do bloco
+                jmp restantes
+
+chama_f2:
                 mov ecx, DWORD quant_blocks
                 push ecx                                ; push quantidade de blocos
                 movzx ecx, BYTE [ebp-1]
@@ -119,6 +134,7 @@ ultimo_bloco:
 
 f2:
                 enter 0,0
+                push ebx
                 push ecx
                 push edx
 
@@ -158,13 +174,23 @@ results:
                 add esp, 8
 
                 dec edx                                 ; edx--
-                push DWORD [ebp+4*edx]
+                mov ebx, DWORD [ebp+4*edx]              ; ebx = último endereço utilizado
+                cmp ebx, -1                             ; se ebx = -1, bloco não foi utilizado                     
+                je nao_usou
+                push ebx
                 call print_num                          ; printa endereço de uso do bloco
                 add esp, 4
+                jmp usou
+nao_usou:
+                push msg_nao_usou
+                push msg_nao_usou_size
+                call print_str                          ; printa que bloco não foi usado
+                add esp, 8
 
+usou:
                 push msg_fim
                 push msg_fim_size
-                call print_str                          ; printa "Ultimo endereco utilizado: "
+                call print_str                          ; printa "Endereco final: "
                 add esp, 8                
 
                 dec edx                                 ; edx--
@@ -175,13 +201,17 @@ results:
                 push newline
                 push 1
                 call print_str
+                add esp, 8
 
                 add edx, 5
-                loop results
+                dec ecx
+                cmp ecx, 0
+                jne results                              ; troquei o 'loop' pq passou o limite do short jump
 
 fim_f2:
                 pop edx
                 pop ecx
+                pop ebx
                 leave
                 ret
 

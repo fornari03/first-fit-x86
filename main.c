@@ -14,6 +14,5 @@ int main(int argc, char *argv[]) {
         }
     }
     int resultado = f1((argc-2)/2, prog, blocks[0], blocks[1], blocks[2], blocks[3], blocks[4], blocks[5], blocks[6], blocks[7]);
-    printf("%d\n", resultado);
     return 0;
 }
