@@ -5,7 +5,7 @@
 section .data
 newline db 0ah
 
-nao_cabe db 'O programa dado nao cabe nos blocos de memoria passados.',0ah,0dh
+nao_cabe db 0ah,0dh,'O programa dado nao cabe nos blocos de memoria passados.',0ah,0dh,0ah,0dh
 nao_cabe_size equ $-nao_cabe
 
 cabe db 0ah,0dh,'O programa foi alocado da seguinte forma nos blocos de memoria passados:',0ah,0dh,0ah,0dh
@@ -49,6 +49,7 @@ repete:
 
                 ; se chegou aqui, o programa não coube nos blocos
                 mov BYTE [ebp-1], 0
+                sub ebx, 2
 
 encerra_f1:
                 dec ebx
@@ -97,6 +98,8 @@ ultimo_bloco:
                 push ecx                                ; push flag de dizer se coube
 
                 call f2
+                
+                add esp, 8
                 mov ecx, DWORD quant_blocks             ; ecx = q
                 add ecx, ecx                            ; ecx = 2q
                 add ecx, ecx                            ; ecx = 4q
@@ -104,8 +107,6 @@ ultimo_bloco:
                 add ecx, ecx                            ; ecx = 8q
                 add ecx, edx                            ; ecx = 12q
                 add esp, ecx                            ; add esp 12 * quant_blocks
-
-                add esp, 8
                 
                 pop ebx
                 pop ecx
@@ -186,11 +187,10 @@ fim_f2:
 
 nao_coube:      
                 pusha
-                mov eax, 4
-                mov ebx, 1
-                mov ecx, nao_cabe
-                mov edx, nao_cabe_size
-                int 80h
+                push nao_cabe
+                push nao_cabe_size
+                call print_str
+                add esp, 8
                 popa
                 jmp fim_f2
                 
