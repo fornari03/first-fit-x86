@@ -27,3 +27,19 @@ Ou, se preferir, usar o script shell para compilar e ligar:
 
     ./carregador args
 ```
+
+Os `args` pro carregador devem ser, em ordem:
+
+- tamanho do programa
+- blocos de memória
+    - pares (endereço inicial, tamanho)
+
+Podem ter de 1 a 4 blocos de memória.
+
+Exemplo:
+
+```shell
+    ./carregador 100 40 35 900 25 6720 300
+    # exemplo com 3 blocos [(40,35), (900,25), (6720,300)]
+    # tamanho do programa: 100
+```
