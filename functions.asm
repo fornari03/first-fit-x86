@@ -1,6 +1,6 @@
-%define quant_blocks [ebp+8]
-%define program_size [ebp+12]
-%define last_aloc [ebp-6]
+%define quant_blocks DWORD [ebp+8]
+%define program_size DWORD [ebp+12]
+%define last_aloc DWORD [ebp-6]
 
 section .data
 newline db 0ah
@@ -37,8 +37,8 @@ f1:             enter 6, 0
                 push ecx
                 push ebx
         
-                mov eax, DWORD program_size             ; eax = tamanho do programa
-                mov ecx, DWORD quant_blocks             ; ecx = quantidade de blocos
+                mov eax, program_size                   ; eax = tamanho do programa
+                mov ecx, quant_blocks                   ; ecx = quantidade de blocos
                 mov ebx, 5                              ; ebx = indice na pilha pro tamanho do primeiro bloco
                 mov BYTE [ebp-1], 1                     ; flag pra dizer se coube
                 mov BYTE [ebp-2], 1                     ; flag pra dizer se coube em um bloco só
@@ -52,7 +52,7 @@ cabe_inteiro:
 
                 ; se chegou aqui, o programa não coube em um bloco só
                 mov ebx, 5                              ; restaura as 
-                mov ecx, DWORD quant_blocks             ; configurações iniciais
+                mov ecx, quant_blocks                   ; configurações iniciais
                 mov BYTE [ebp-2], 0                     ; atualiza a flag de caber num bloco só
 
 repete: 
@@ -69,7 +69,7 @@ repete:
 
 encerra_f1:
                 dec ebx                                 ; ebx-- (ebx agora é o endereço do bloco)
-                mov DWORD last_aloc, ebx                ; last_aloc = ebx
+                mov last_aloc, ebx                      ; last_aloc = ebx
                 mov ebx, 4
 
                 cmp BYTE [ebp-2], 1
@@ -81,7 +81,7 @@ encerra_f1:
                 ; ecx -> não importa
 
 args_blocos:
-                cmp ebx, DWORD last_aloc            
+                cmp ebx, last_aloc            
                 je ultimo_bloco                         ; enquanto ebx < last_aloc:
                 mov ecx, DWORD [ebp+ebx*4]              ; ecx = endereço inicial
                 push ecx                                ; push endereço inicial
@@ -105,7 +105,7 @@ ultimo_bloco:
                 add ecx, DWORD [ebp+ebx*4]              ; ecx = endereço inicial - 1 + tamanho
                 push ecx                                ; push ultimo endereço do bloco
 
-                mov eax, DWORD quant_blocks             ; eax = q
+                mov eax, quant_blocks                   ; eax = q
                 dec eax                                 ; eax = q-1
                 add eax, eax                            ; eax = (q-1)*2
                 add eax, 5                              ; eax = 5 + (q-1)*2
@@ -127,7 +127,7 @@ so_usou_1_bloco:
                 ; eax = tamanho do programa
                 ; ebx = 4 (indice na pilha pro endereço inicial do primeiro bloco)
                 ; last_aloc = indice na pilha pro endereço inicial do bloco usado
-                cmp ebx, DWORD last_aloc                ; ebx == last_aloc
+                cmp ebx, last_aloc                      ; ebx == last_aloc
                 je ultimo_bloco                         ; ? pula pro ultimo bloco : continua
                 mov ecx, DWORD [ebp+ebx*4]              ; ecx = endereço inicial
                 push ecx                                ; push endereço inicial
@@ -140,7 +140,7 @@ so_usou_1_bloco:
                 jmp so_usou_1_bloco                
 
 chama_f2:
-                mov ecx, DWORD quant_blocks
+                mov ecx, quant_blocks
                 push ecx                                ; push quantidade de blocos
                 movzx ecx, BYTE [ebp-1]
                 push ecx                                ; push flag de dizer se coube
@@ -148,7 +148,7 @@ chama_f2:
                 call f2
                 
                 add esp, 8
-                mov ecx, DWORD quant_blocks             ; ecx = q
+                mov ecx, quant_blocks                   ; ecx = q
                 add ecx, ecx                            ; ecx = 2q
                 add ecx, ecx                            ; ecx = 4q
                 mov edx, ecx                            ; edx = 4q
