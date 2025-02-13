@@ -1,6 +1,6 @@
 %define quant_blocks [ebp+8]
 %define program_size [ebp+12]
-%define last_aloc [ebp-5]
+%define last_aloc [ebp-6]
 
 section .data
 newline db 0ah
@@ -32,7 +32,7 @@ buffer resb 12
 section .text
 global f1
 
-f1:             enter 5, 0
+f1:             enter 6, 0
 
                 push ecx
                 push ebx
@@ -41,6 +41,19 @@ f1:             enter 5, 0
                 mov ecx, DWORD quant_blocks             ; ecx = quantidade de blocos
                 mov ebx, 5                              ; ebx = indice na pilha pro tamanho do primeiro bloco
                 mov BYTE [ebp-1], 1                     ; flag pra dizer se coube
+                mov BYTE [ebp-2], 1                     ; flag pra dizer se coube em um bloco só
+
+cabe_inteiro:
+                cmp eax, DWORD [ebp+ebx*4]              ; programa <= bloco
+                jle encerra_f1                          ; ? encerra_f1 : continua loop
+
+                add ebx, 2
+                loop cabe_inteiro
+
+                ; se chegou aqui, o programa não coube em um bloco só
+                mov ebx, 5                              ; restaura as 
+                mov ecx, DWORD quant_blocks             ; configurações iniciais
+                mov BYTE [ebp-2], 0                     ; atualiza a flag de caber num bloco só
 
 repete: 
                 cmp eax, DWORD [ebp+ebx*4]              ; programa <= bloco
@@ -55,9 +68,13 @@ repete:
                 sub ebx, 2                              ; ajusta o índice pro último
 
 encerra_f1:
-                dec ebx
-                mov DWORD last_aloc, ebx
+                dec ebx                                 ; ebx-- (ebx agora é o endereço do bloco)
+                mov DWORD last_aloc, ebx                ; last_aloc = ebx
                 mov ebx, 4
+
+                cmp BYTE [ebp-2], 1
+                je so_usou_1_bloco
+
                 ; eax = restante de espaço do programa a ser alocado
                 ; ebx = 4 (endereço inicial do 1° bloco)
                 ; last_aloc = indice na pilha pro endereço do ultimo bloco que aloca espaço [FIXO]
@@ -100,11 +117,27 @@ restantes:
                 mov ecx, DWORD [ebp+ebx*4]              ; ecx = endereço inicial
                 push ecx                                ; push endereço inicial
                 push -1                                 ; indica que não usou
-                inc ebx                                 ; ebx--
+                inc ebx                                 ; ebx++
                 add ecx, DWORD [ebp+ebx*4]              ; ecx += tamanho do bloco
                 dec ecx                                 ; ecx--
                 push ecx                                ; push ultimo endereço do bloco
                 jmp restantes
+
+so_usou_1_bloco:
+                ; eax = tamanho do programa
+                ; ebx = 4 (indice na pilha pro endereço inicial do primeiro bloco)
+                ; last_aloc = indice na pilha pro endereço inicial do bloco usado
+                cmp ebx, DWORD last_aloc                ; ebx == last_aloc
+                je ultimo_bloco                         ; ? pula pro ultimo bloco : continua
+                mov ecx, DWORD [ebp+ebx*4]              ; ecx = endereço inicial
+                push ecx                                ; push endereço inicial
+                push -1                                 ; indica que não usou
+                inc ebx                                 ; ebx++
+                add ecx, DWORD [ebp+ebx*4]              ; ecx += tamanho do bloco
+                dec ecx                                 ; ecx--
+                push ecx                                ; push ultimo endereço do bloco
+                inc ebx                                 ; ebx++ (endereço do próximo bloco)
+                jmp so_usou_1_bloco                
 
 chama_f2:
                 mov ecx, DWORD quant_blocks
