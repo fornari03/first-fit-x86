@@ -217,6 +217,11 @@ chama_f2:
 
 
 
+
+
+
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Função para printar  ;;;
 ;;; na tela as alocações ;;;
@@ -240,8 +245,12 @@ funcao2:
                 push cabe_size
                 call print_str                          ; printa que cabe o programa
                 add esp, 8
-                mov ecx, DWORD [ebp+12]                 ; ecx = quant_blocks
-                mov edx, 8                              ; edx = indice na pilha
+                mov eax, DWORD [ebp+12]
+                mov cl, 5
+                mul cl
+                movzx edx, ax
+                add edx, 3                              ; edx = indice na pilha
+                mov ecx, 1
 
 results:
                 push msg_bloco
@@ -347,10 +356,10 @@ nova_linha:
                 call print_str
                 add esp, 8
 
-                add edx, 9
-                dec ecx
-                cmp ecx, 0
-                jne results                              ; troquei o 'loop' pq passou o limite do short jump
+                dec edx
+                inc ecx
+                cmp ecx, DWORD [ebp+12]
+                jle results                              ; troquei o 'loop' pq passou o limite do short jump
 
 fim_f2:
                 pop edx
@@ -366,6 +375,9 @@ nao_coube:
                 add esp, 8
                 jmp fim_f2
                 
+
+
+
 
 
 
