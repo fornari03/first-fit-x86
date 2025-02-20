@@ -26,8 +26,21 @@ msg_fim_size equ $-msg_fim
 msg_nao_usou db 'Bloco não foi utilizado.',0ah,0dh
 msg_nao_usou_size equ $-msg_nao_usou
 
+msg_enderecos_prog_1 db 'O BLOCO ALOCOU DO ENDEREÇO '
+msg_enderecos_prog_1_size equ $-msg_enderecos_prog_1
+
+msg_enderecos_prog_2 db ' AO '
+msg_enderecos_prog_2_size equ $-msg_enderecos_prog_2
+
+msg_enderecos_prog_3 db ' DO PROGRAMA.',0ah,0dh
+msg_enderecos_prog_3_size equ $-msg_enderecos_prog_3
+
+
+
 section .bss
 buffer resb 12
+
+
 
 section .text
 global funcao1
@@ -279,16 +292,40 @@ usou:
                 call print_num                          ; printa endereço final do bloco
                 add esp, 4
 
-                dec edx                                 ; edx-- (pega agora o endereço inicial do programa no bloco)
-                push DWORD [ebp+4*edx]
+                dec edx                                 ; edx--
+                mov ebx, DWORD [ebp+4*edx]              ; ebx = endereço inicial do programa no bloco
+                dec edx                                 ; edx-- (pra caso não tenha usado o bloco)
+                cmp ebx, -1                             ; se ebx = -1, bloco não foi utilizado 
+                je nova_linha                           ; não printa nada sobre os endereços do programa
+                inc edx                                 ; edx++ (pra restaurar o valor de antes do cmp)
+
+                ; caso o bloco tenha sido utilizado
+                push msg_enderecos_prog_1
+                push msg_enderecos_prog_1_size
+                call print_str
+                add esp, 8
+
+                push ebx
                 call print_num
                 add esp, 4
+
+                push msg_enderecos_prog_2
+                push msg_enderecos_prog_2_size
+                call print_str
+                add esp, 8
 
                 dec edx                                 ; edx-- (pega agora o endereço final do programa no bloco)
                 push DWORD [ebp+4*edx]
                 call print_num
                 add esp, 4
 
+                push msg_enderecos_prog_3
+                push msg_enderecos_prog_3_size
+                call print_str
+                add esp, 8
+
+
+nova_linha:
                 push newline
                 push 1
                 call print_str
