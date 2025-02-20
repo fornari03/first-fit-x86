@@ -56,6 +56,7 @@ funcao1:        enter 6, 0
                 mov ebx, 5                              ; ebx = indice na pilha pro tamanho do primeiro bloco
                 mov BYTE [ebp-1], 1                     ; flag pra dizer se coube
                 mov BYTE [ebp-2], 1                     ; flag pra dizer se coube em um bloco só
+                mov edx, 0                              ; edx = endereco inicial do programa
 
 cabe_inteiro:
                 cmp eax, DWORD [ebp+ebx*4]              ; programa <= bloco
@@ -108,6 +109,11 @@ args_blocos:
                 dec ecx                                 ; ecx--
                 push ecx                                ; push endereço final usado
                 push ecx                                ; push ultimo endereço do bloco
+                push edx                                ; push endereço inicial do programa no bloco
+                add edx, DWORD [ebp+ebx*4]              ; soma o tamanho do bloco ao endereço do programa
+                dec edx                                 ; edx--
+                push edx                                ; push endereço final do programa no bloco
+                inc edx                                 ; edx++
                 inc ebx                                 ; ebx++
                 jmp args_blocos
 
@@ -122,6 +128,11 @@ ultimo_bloco:
                 sub ecx, eax                            ; ecx -= eax
                 add ecx, DWORD [ebp+ebx*4]              ; ecx = endereço inicial - 1 + tamanho
                 push ecx                                ; push ultimo endereço do bloco
+                push edx                                ; push endereço inicial do programa no bloco
+                add edx, eax                            ; edx += eax (add o tamanho do resto do programa)
+                dec edx                                 ; edx--
+                push edx                                ; push endereço final do programa no bloco
+                inc edx
 
                 mov eax, quant_blocks                   ; eax = q
                 dec eax                                 ; eax = q-1
@@ -139,6 +150,8 @@ restantes:
                 add ecx, DWORD [ebp+ebx*4]              ; ecx += tamanho do bloco
                 dec ecx                                 ; ecx--
                 push ecx                                ; push ultimo endereço do bloco
+                push -1                                 ; indica que não alocou programa nesse bloco
+                push -1                                 ; indica que não alocou programa nesse bloco
                 jmp restantes
 
 so_usou_1_bloco:
@@ -154,6 +167,8 @@ so_usou_1_bloco:
                 add ecx, DWORD [ebp+ebx*4]              ; ecx += tamanho do bloco
                 dec ecx                                 ; ecx--
                 push ecx                                ; push ultimo endereço do bloco
+                push -1                                 ; indica que não alocou programa nesse bloco
+                push -1                                 ; indica que não alocou programa nesse bloco
                 inc ebx                                 ; ebx++ (endereço do próximo bloco)
                 jmp so_usou_1_bloco                
 
@@ -172,11 +187,12 @@ chama_f2:
                 add esp, 8
                 mov ecx, quant_blocks                   ; ecx = q
                 add ecx, ecx                            ; ecx = 2q
+                mov edx, ecx                            ; edx = 2q
                 add ecx, ecx                            ; ecx = 4q
-                mov edx, ecx                            ; edx = 4q
                 add ecx, ecx                            ; ecx = 8q
-                add ecx, edx                            ; ecx = 12q
-                add esp, ecx                            ; add esp 12 * quant_blocks (12: 4(inteiros) * 3(numero de inteiros))
+                add ecx, edx                            ; ecx = 10q
+                add ecx, ecx                            ; ecx = 20q
+                add esp, ecx                            ; add esp 20 * quant_blocks (20: 4(inteiros) * 5(numero de inteiros))
                 
                 pop ebx
                 pop ecx
@@ -212,7 +228,7 @@ funcao2:
                 call print_str                          ; printa que cabe o programa
                 add esp, 8
                 mov ecx, DWORD [ebp+12]                 ; ecx = quant_blocks
-                mov edx, 6                              ; edx = indice na pilha
+                mov edx, 8                              ; edx = indice na pilha
 
 results:
                 push msg_bloco
@@ -263,12 +279,22 @@ usou:
                 call print_num                          ; printa endereço final do bloco
                 add esp, 4
 
+                dec edx                                 ; edx-- (pega agora o endereço inicial do programa no bloco)
+                push DWORD [ebp+4*edx]
+                call print_num
+                add esp, 4
+
+                dec edx                                 ; edx-- (pega agora o endereço final do programa no bloco)
+                push DWORD [ebp+4*edx]
+                call print_num
+                add esp, 4
+
                 push newline
                 push 1
                 call print_str
                 add esp, 8
 
-                add edx, 5
+                add edx, 9
                 dec ecx
                 cmp ecx, 0
                 jne results                              ; troquei o 'loop' pq passou o limite do short jump
@@ -281,12 +307,10 @@ fim_f2:
                 ret
 
 nao_coube:      
-                pusha
                 push nao_cabe
                 push nao_cabe_size
                 call print_str
                 add esp, 8
-                popa
                 jmp fim_f2
                 
 
@@ -305,7 +329,8 @@ print_num:
                 push eax       
                 push ebx                                
                 push ecx                                
-                push edx    
+                push edx 
+                push edi   
 
                 mov edi, buffer
                 mov ecx, 12
@@ -339,6 +364,7 @@ convert_loop:
                 mov edx, 1
                 int 80h                                 ; printa '\n'
 
+                pop edi
                 pop edx
                 pop ecx
                 pop ebx
