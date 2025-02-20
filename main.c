@@ -3,7 +3,7 @@
 
 
 int main(int argc, char *argv[]) {
-    extern int f1(int, int, int, int, int, int, int, int, int, int);
+    extern int funcao1(int, int, int, int, int, int, int, int, int, int);
     int prog = atoi(argv[1]);
     int blocks[8];
     for (int i = 1; i <= 8; i++) {
@@ -13,6 +13,8 @@ int main(int argc, char *argv[]) {
             blocks[i-1] = 0;
         }
     }
-    int resultado = f1((argc-2)/2, prog, blocks[0], blocks[1], blocks[2], blocks[3], blocks[4], blocks[5], blocks[6], blocks[7]);
+
+    funcao1((argc-2)/2, prog, blocks[0], blocks[1], blocks[2], blocks[3], blocks[4], blocks[5], blocks[6], blocks[7]);
+    
     return 0;
 }

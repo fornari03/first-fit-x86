@@ -30,10 +30,24 @@ section .bss
 buffer resb 12
 
 section .text
-global f1
+global funcao1
 
-f1:             enter 6, 0
 
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Função para efetuar  ;;;
+;;;  os cálculos para a  ;;;
+;;; alocação nos blocos  ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Recebe os parâmetros ;;;
+;;; pela pilha a partir  ;;;
+;;;      da main.c       ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+funcao1:        enter 6, 0
+
+                push edx
                 push ecx
                 push ebx
         
@@ -74,6 +88,10 @@ encerra_f1:
 
                 cmp BYTE [ebp-2], 1
                 je so_usou_1_bloco
+
+                ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                ;;; A PARTIR DAQUI, os argumentos para a funcao2 serão empilhados ;;;
+                ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
                 ; eax = restante de espaço do programa a ser alocado
                 ; ebx = 4 (endereço inicial do 1° bloco)
@@ -145,7 +163,11 @@ chama_f2:
                 movzx ecx, BYTE [ebp-1]
                 push ecx                                ; push flag de dizer se coube
 
-                call f2
+                call funcao2
+
+                ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                ;;; aqui iremos desempilhar todos os bytes que empilhamos para chamar funcao2 ;;;
+                ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;              
                 
                 add esp, 8
                 mov ecx, quant_blocks                   ; ecx = q
@@ -154,10 +176,11 @@ chama_f2:
                 mov edx, ecx                            ; edx = 4q
                 add ecx, ecx                            ; ecx = 8q
                 add ecx, edx                            ; ecx = 12q
-                add esp, ecx                            ; add esp 12 * quant_blocks
+                add esp, ecx                            ; add esp 12 * quant_blocks (12: 4(inteiros) * 3(numero de inteiros))
                 
                 pop ebx
                 pop ecx
+                pop edx
                 leave
                 ret
 
@@ -165,7 +188,16 @@ chama_f2:
 
 
 
-f2:
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Função para printar  ;;;
+;;; na tela as alocações ;;;
+;;;  feitas nos blocos   ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Recebe os parâmetros ;;;
+;;; pela pilha a partir  ;;;
+;;;      da funcao1      ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+funcao2:
                 enter 0,0
                 push ebx
                 push ecx
@@ -261,6 +293,8 @@ nao_coube:
 
 
 
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Função auxiliar para ;;;
 ;;;   printar um número  ;;;
@@ -281,7 +315,7 @@ print_num:
 
                 mov ecx, buffer + 10                    ; aponta ecx para o final do buffer
                 mov byte [ecx], 0
-                mov ebx, 10                             ; decimal
+                mov ebx, 10                             ; vai dividir por 10 pra pegar os dígitos
                 mov eax, DWORD [ebp+8]                  ; pega argumento (numero pra printar)
 
 convert_loop:
@@ -311,6 +345,8 @@ convert_loop:
                 pop eax
                 leave
                 ret
+
+
 
 
 
