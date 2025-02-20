@@ -3,9 +3,11 @@ Repositório para um simulador de gerenciador de memória first-fit em Assembly 
 
 ## Como rodar
 
-Primeiro deve-se instalar a biblioteca `gcc-multilib`:
+Primeiro deve-se instalar as bibliotecas `gcc-multilib` e `nasm`:
 ```shell
     sudo apt install gcc-multilib
+
+    sudo apt install nasm
 ```
 
 Depois, basta apenas estar no diretório root do projeto e digitar os seguintes comandos:
