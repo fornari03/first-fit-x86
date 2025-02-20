@@ -252,6 +252,10 @@ results:
                 push ecx
                 call print_num                          ; printa o numero do bloco
                 add esp, 4
+                push newline
+                push 1
+                call print_str                          ; printa '\n
+                add esp, 8
 
                 push msg_inicio
                 push msg_inicio_size
@@ -261,6 +265,10 @@ results:
                 push DWORD [ebp+4*edx]
                 call print_num                          ; printa endereço de inicio do bloco
                 add esp, 4
+                push newline
+                push 1
+                call print_str                          ; printa '\n
+                add esp, 8
 
                 push msg_utilizado
                 push msg_utilizado_size
@@ -274,6 +282,10 @@ results:
                 push ebx
                 call print_num                          ; printa endereço de uso do bloco
                 add esp, 4
+                push newline
+                push 1
+                call print_str                          ; printa '\n
+                add esp, 8
                 jmp usou
 nao_usou:
                 push msg_nao_usou
@@ -291,6 +303,10 @@ usou:
                 push DWORD [ebp+4*edx]
                 call print_num                          ; printa endereço final do bloco
                 add esp, 4
+                push newline
+                push 1
+                call print_str                          ; printa '\n
+                add esp, 8
 
                 dec edx                                 ; edx--
                 mov ebx, DWORD [ebp+4*edx]              ; ebx = endereço inicial do programa no bloco
@@ -394,12 +410,6 @@ convert_loop:
                 mov ecx, buffer
                 mov edx, 10
                 int 80h                                 ; printa o numero
-
-                mov eax, 4
-                mov ebx, 1
-                mov ecx, newline
-                mov edx, 1
-                int 80h                                 ; printa '\n'
 
                 pop edi
                 pop edx
