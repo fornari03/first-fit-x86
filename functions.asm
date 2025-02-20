@@ -245,12 +245,12 @@ funcao2:
                 push cabe_size
                 call print_str                          ; printa que cabe o programa
                 add esp, 8
-                mov eax, DWORD [ebp+12]
-                mov cl, 5
-                mul cl
-                movzx edx, ax
-                add edx, 3                              ; edx = indice na pilha
-                mov ecx, 1
+                mov eax, DWORD [ebp+12]                 ; eax = quant_blocks
+                mov cl, 5                               ; cl = 5 (quantidade de infos por bloco)
+                mul cl                                  ; ax = quant_blocks * 5
+                movzx edx, ax                           ; edx = ax
+                add edx, 3                              ; edx += 3 (edx é o indice na pilha pro endereço inicial do primeiro bloco)
+                mov ecx, 1                              ; ecx é o número do bloco começando do 1
 
 results:
                 push msg_bloco
@@ -314,7 +314,7 @@ usou:
                 add esp, 4
                 push newline
                 push 1
-                call print_str                          ; printa '\n
+                call print_str                          ; printa '\n'
                 add esp, 8
 
                 dec edx                                 ; edx--
@@ -327,7 +327,7 @@ usou:
                 ; caso o bloco tenha sido utilizado
                 push msg_enderecos_prog_1
                 push msg_enderecos_prog_1_size
-                call print_str
+                call print_str                          ; printa "O BLOCO ALOCOU DO ENDEREÇO "
                 add esp, 8
 
                 push ebx
@@ -335,7 +335,7 @@ usou:
                 add esp, 4
 
                 push msg_enderecos_prog_2
-                push msg_enderecos_prog_2_size
+                push msg_enderecos_prog_2_size          ; printa " AO "
                 call print_str
                 add esp, 8
 
@@ -346,20 +346,20 @@ usou:
 
                 push msg_enderecos_prog_3
                 push msg_enderecos_prog_3_size
-                call print_str
+                call print_str                          ; printa " DO PROGRAMA."
                 add esp, 8
 
 
 nova_linha:
                 push newline
                 push 1
-                call print_str
+                call print_str                          ; printa '\n'
                 add esp, 8
 
-                dec edx
-                inc ecx
-                cmp ecx, DWORD [ebp+12]
-                jle results                              ; troquei o 'loop' pq passou o limite do short jump
+                dec edx                                 ; edx-- (vai pro endereço inicial do próximo bloco)
+                inc ecx                                 ; incrementa o número do bloco
+                cmp ecx, DWORD [ebp+12]                 ; se já foram todos os blocos, termina
+                jle results                             ; troquei o 'loop' pq passou o limite do short jump
 
 fim_f2:
                 pop edx
